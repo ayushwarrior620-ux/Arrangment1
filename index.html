@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX | Master Substitution AI v3.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --bg: #050507; 
+            --card: #0f111a; 
+            --primary: #0070f3; 
+            --accent: #00dfd8; 
+            --text: #ffffff; 
+            --danger: #ff0055; 
+            --success: #00ff88; 
+        }
+        
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            overflow-x: hidden; 
+        }
+
+        .grid-bg { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: linear-gradient(rgba(0, 223, 216, 0.03) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 223, 216, 0.03) 1px, transparent 1px); 
+            background-size: 30px 30px; z-index: -1; 
+        }
+
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
+        
+        #main-app { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
+
+        .glass { 
+            background: rgba(15, 17, 26, 0.8); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 16px; 
+            backdrop-filter: blur(10px); 
+            padding: 25px; 
+        }
+
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; margin-top: 20px; }
+
+        input, select { 
+            background: #161925; border: 1px solid #2d314d; color: white; 
+            padding: 12px; border-radius: 8px; margin-bottom: 10px; 
+            width: 100%; box-sizing: border-box; font-family: inherit; 
+        }
+
+        .btn { 
+            background: var(--primary); color: white; border: none; 
+            padding: 12px 24px; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        .btn:hover { background: var(--accent); color: black; box-shadow: 0 0 20px var(--accent); }
+
+        .t-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; background: rgba(255,255,255,0.03); 
+            border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); 
+        }
+
+        .status-pill { 
+            padding: 6px 12px; border-radius: 20px; font-size: 11px; 
+            font-weight: 800; cursor: pointer; border: none; min-width: 80px; 
+        }
+
+        .present { background: rgba(0, 255, 136, 0.1); color: var(--success); }
+        .absent { background: rgba(255, 0, 85, 0.1); color: var(--danger); }
+
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; 
+        }
+
+        .modal-content { 
+            background: var(--card); width: 850px; max-height: 85vh; 
+            overflow-y: auto; padding: 35px; border-radius: 20px; 
+            border: 1px solid var(--primary); 
+        }
+
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+
+        .arr-card { 
+            background: #1a1c2e; padding: 20px; border-radius: 15px; 
+            margin-bottom: 15px; border: 1px solid rgba(0, 223, 216, 0.2); 
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div id="login-screen">
+        <div class="glass" style="width: 350px; text-align: center;">
+            <h1 style="color: var(--accent); margin-bottom: 0; font-size: 40px; letter-spacing: -2px;">MATRIX</h1>
+            <p style="font-size: 11px; color: #64748b; margin-top: 5px; font-weight: bold;">AUTOMATED SUBSTITUTION ENGINE</p>
+            <input type="password" id="auth-pass" placeholder="Enter Password">
+            <button class="btn" style="width: 100%" onclick="unlock()">AUTHORIZE</button>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 id="day-display" style="margin:0; font-size: 42px; text-transform: uppercase; color: var(--accent); letter-spacing: -1px;">LOADING...</h1>
+                <p style="color: #64748b; margin:0; font-weight: bold;">SYSTEM STATUS: ONLINE • ALL NODES SYNCED</p>
+            </div>
+            <button class="btn" onclick="openModal()">+ REGISTER MASTER SCHEDULE</button>
+        </div>
+
+        <div class="grid">
+            <div class="glass" style="height: 70vh; overflow-y: auto;">
+                <h3 style="margin-top:0; color: var(--primary)">STAFF DIRECTORY</h3>
+                <div id="staff-list"></div>
+            </div>
+            <div class="glass" style="height: 70vh; overflow-y: auto;">
+                <h3 style="margin-top:0; color: var(--primary)">AI GENERATED ARRANGEMENTS</h3>
+                <div id="arr-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0">Register Teacher Master Plan</h2>
+            <div class="row">
+                <input type="text" id="new-name" placeholder="Teacher Full Name">
+                <input type="text" id="new-ct-class" placeholder="CT Class" style="width: 100px">
+                <input type="text" id="new-ct-sec" placeholder="CT Sec" style="width: 100px">
+            </div>
+            <h4 style="color: var(--accent); margin-top: 25px; border-bottom: 1px solid #2d314d; padding-bottom: 10px;">WEEKLY MASTER PLAN</h4>
+            <div id="entry-container"></div>
+            <button onclick="addEntryRow()" style="background: none; border: 1px dashed var(--success); color: var(--success); cursor: pointer; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold;">+ ADD PERIOD TO MASTER PLAN</button>
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn" style="flex: 2" onclick="saveTeacher()">SYNC TO CLOUD</button>
+                <button class="btn" style="flex: 1; background: #334" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION (REPLACE THESE) ---
+        const SB_URL = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg'; 
+        const _db = supabase.createClient(SB_URL, SB_KEY);
+
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const today = days[new Date().getDay()];
+
+        // --- AUTHENTICATION ---
+        function unlock() {
+            const pass = document.getElementById('auth-pass').value;
+            if(pass === 'admin123') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('day-display').innerText = today;
+                refresh();
+            } else { alert("ACCESS DENIED"); }
+        }
+
+        // --- DATA FETCHING ---
+        async function refresh() {
+            const { data: teachers } = await _db.from('teachers').select('*').order('name');
+            renderStaff(teachers || []);
+            processAI(teachers || []);
+        }
+
+        function renderStaff(list) {
+            document.getElementById('staff-list').innerHTML = list.map(t => `
+                <div class="t-card">
+                    <div>
+                        <div style="font-weight:bold">${t.name}</div>
+                        <div style="font-size:11px; color:var(--primary)">CT: ${t.ct_class || 'N/A'}-${t.ct_section || ''}</div>
+                    </div>
+                    <button class="status-pill ${t.is_absent ? 'absent' : 'present'}" onclick="toggleStatus('${t.id}', ${t.is_absent})">
+                        ${t.is_absent ? 'ABSENT' : 'PRESENT'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function toggleStatus(id, stat) {
+            await _db.from('teachers').update({ is_absent: !stat }).eq('id', id);
+            refresh();
+        }
+
+        // --- MASTER DATA ENTRY ---
+        async function saveTeacher() {
+            const name = document.getElementById('new-name').value;
+            if(!name) return alert("Name Required");
+
+            const { data: teacher, error } = await _db.from('teachers').insert([{ 
+                name, 
+                ct_class: document.getElementById('new-ct-class').value, 
+                ct_section: document.getElementById('new-ct-sec').value 
+            }]).select();
+
+            if(error) return alert(error.message);
+
+            const tid = teacher[0].id;
+            const rows = document.querySelectorAll('.schedule-row');
+
+            for(let r of rows) {
+                const type = r.querySelector('.r-type').value;
+                const baseData = {
+                    teacher_id: tid,
+                    day_of_week: r.querySelector('.r-day').value,
+                    period_number: r.querySelector('.r-prd').value
+                };
+
+                if(type === 'busy') {
+                    await _db.from('teacher_schedule').insert([{
+                        ...baseData,
+                        class_name: r.querySelector('.r-cls').value,
+                        section: r.querySelector('.r-sec').value,
+                        subject: r.querySelector('.r-sub').value
+                    }]);
+                } else {
+                    await _db.from('free_periods').insert([baseData]);
+                }
+            }
+            alert("Matrix Synced Successfully"); 
+            closeModal(); 
+            refresh();
+        }
+
+        // --- AI LOGIC ---
+        async function processAI(all) {
+            const feed = document.getElementById('arr-list');
+            const absents = all.filter(t => t.is_absent);
+            
+            if(!absents.length) { 
+                feed.innerHTML = "<div style='text-align:center; padding:100px; opacity:0.3; font-weight:bold;'>SYSTEM SECURE • NO ABSENTEES</div>"; 
+                return; 
+            }
+
+            feed.innerHTML = "Processing Nodes...";
+            let resultsHTML = "";
+
+            for(let t of absents) {
+                // Find what classes they have today
+                const { data: slots } = await _db.from('teacher_schedule')
+                    .select('*')
+                    .eq('teacher_id', t.id)
+                    .eq('day_of_week', today);
+
+                for(let s of slots) {
+                    // Find someone who is FREE this period
+                    const { data: freeOnes } = await _db.from('free_periods')
+                        .select('teacher_id, teachers(name, is_absent)')
+                        .eq('day_of_week', today)
+                        .eq('period_number', s.period_number);
+
+                    const match = freeOnes?.find(f => f.teachers && !f.teachers.is_absent);
+
+                    resultsHTML += `
+                        <div class="arr-card">
+                            <div style="display:flex; justify-content:space-between">
+                                <span style="color:var(--accent); font-weight:bold">PRD ${s.period_number} • ${s.class_name}-${s.section}</span>
+                                <span style="color:var(--primary)">${s.subject}</span>
+                            </div>
+                            <div style="font-size:11px; opacity:0.6; margin: 10px 0;">Absent: ${t.name}</div>
+                            <div style="background:rgba(0,255,136,0.1); padding:12px; border-radius:8px; border-left:4px solid var(--success)">
+                                <div style="font-size:9px; color:var(--success)">AI ASSIGNED:</div>
+                                <div style="font-weight:bold; font-size:18px;">${match ? match.teachers.name : "!!! NO FREE STAFF !!!"}</div>
+                            </div>
+                        </div>`;
+                }
+            }
+            feed.innerHTML = resultsHTML;
+        }
+
+        // --- UI HELPERS ---
+        function addEntryRow() {
+            const div = document.createElement('div');
+            div.className = "row schedule-row";
+            div.innerHTML = `
+                <select class="r-day" style="width: 120px"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
+                <input type="number" class="r-prd" placeholder="Prd" style="width: 65px">
+                <select class="r-type" style="width: 120px" onchange="toggleRow(this)"><option value="busy">TEACHING</option><option value="free">FREE</option></select>
+                <input type="text" class="r-cls" placeholder="Class" style="width: 80px">
+                <input type="text" class="r-sec" placeholder="Sec" style="width: 60px">
+                <input type="text" class="r-sub" placeholder="Subject">`;
+            document.getElementById('entry-container').appendChild(div);
+        }
+
+        function toggleRow(el) {
+            const row = el.closest('.schedule-row');
+            row.querySelectorAll('.r-cls, .r-sec, .r-sub').forEach(i => i.style.opacity = el.value === 'free' ? '0.2' : '1');
+        }
+
+        function openModal() { document.getElementById('modal').style.display = 'flex'; addEntryRow(); }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; document.getElementById('entry-container').innerHTML = ''; }
+    </script>
+</body>
+</html>
