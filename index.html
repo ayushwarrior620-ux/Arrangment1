@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX | GGPS Dhanbad AI v3.6</title>
+    <title>MATRIX | GGPS Dhanbad AI v3.7</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
@@ -32,7 +32,6 @@
         }
 
         #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
-        
         #main-app { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
 
         .glass { 
@@ -43,7 +42,7 @@
             padding: 25px; 
         }
 
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; margin-top: 20px; }
+        .grid { display: grid; grid-template-columns: 420px 1fr; gap: 30px; margin-top: 20px; }
 
         input, select { 
             background: #161925; border: 1px solid #2d314d; color: white; 
@@ -60,10 +59,12 @@
         .btn:hover { background: var(--accent); color: black; box-shadow: 0 0 20px var(--accent); }
 
         .t-card { 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: flex; flex-direction: column; gap: 10px;
             padding: 15px; background: rgba(255,255,255,0.03); 
-            border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); 
+            border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--primary); 
         }
+
+        .t-row { display: flex; justify-content: space-between; align-items: center; }
 
         .status-pill { 
             padding: 6px 12px; border-radius: 20px; font-size: 11px; 
@@ -122,7 +123,8 @@
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: var(--accent); margin-top:0;">Register Master Schedule</h2>
+            <h2 id="modal-title" style="color: var(--accent); margin-top:0;">Register Master Schedule</h2>
+            <input type="hidden" id="edit-id">
             <div class="row">
                 <input type="text" id="new-name" placeholder="Teacher Full Name">
                 <select id="new-wing"><option value="Senior">Senior Wing</option><option value="Primary">Primary Wing</option></select>
@@ -166,15 +168,18 @@
             const { data: t } = await _db.from('teachers').select('*').order('name');
             document.getElementById('staff-list').innerHTML = t.map(x => `
                 <div class="t-card">
-                    <div>
-                        <div style="font-weight:bold">${x.name}</div>
-                        <div style="font-size:9px; color:${x.can_take_arrangement ? 'var(--primary)' : 'var(--danger)'}">
-                            ${x.wing} | ${x.can_take_arrangement ? 'DUTY: YES' : 'DUTY: NO'}
+                    <div class="t-row">
+                        <div>
+                            <div style="font-weight:bold">${x.name}</div>
+                            <div style="font-size:9px; color:${x.can_take_arrangement ? 'var(--primary)' : 'var(--danger)'}">
+                                ${x.wing} | ${x.can_take_arrangement ? 'DUTY: YES' : 'DUTY: NO'}
+                            </div>
                         </div>
+                        <button class="status-pill ${x.is_absent ? 'absent' : 'present'}" onclick="toggleStatus('${x.id}', ${x.is_absent})">
+                            ${x.is_absent ? 'ABSENT' : 'PRESENT'}
+                        </button>
                     </div>
-                    <button class="status-pill ${x.is_absent ? 'absent' : 'present'}" onclick="toggleStatus('${x.id}', ${x.is_absent})">
-                        ${x.is_absent ? 'ABSENT' : 'PRESENT'}
-                    </button>
+                    <button class="btn" style="font-size:10px; padding:5px; background:#2d314d" onclick="editTeacher('${x.id}')">EDIT PROFILE & SCHEDULE</button>
                 </div>`).join('');
             processAI(t || []);
         }
@@ -184,22 +189,47 @@
             refresh(); 
         }
 
-        async function saveTeacher() {
-            const name = document.getElementById('new-name').value;
-            if(!name) return alert("Name is required");
+        async function editTeacher(id) {
+            const { data: t } = await _db.from('teachers').select('*').eq('id', id).single();
+            const { data: schedule } = await _db.from('teacher_schedule').select('*').eq('teacher_id', id);
+            const { data: free } = await _db.from('free_periods').select('*').eq('teacher_id', id);
 
-            const { data: teacher, error } = await _db.from('teachers').insert([{ 
-                name: name,
+            openModal();
+            document.getElementById('modal-title').innerText = "Edit Teacher: " + t.name;
+            document.getElementById('edit-id').value = t.id;
+            document.getElementById('new-name').value = t.name;
+            document.getElementById('new-wing').value = t.wing;
+            document.getElementById('new-subject').value = t.main_subject;
+            document.getElementById('new-ct-class').value = t.ct_class;
+            document.getElementById('new-ct-sec').value = t.ct_section;
+            document.getElementById('can-sub').checked = t.can_take_arrangement;
+
+            document.getElementById('entry-container').innerHTML = '';
+            
+            schedule.forEach(s => addEntryRow('busy', s));
+            free.forEach(f => addEntryRow('free', f));
+        }
+
+        async function saveTeacher() {
+            const id = document.getElementById('edit-id').value;
+            const teacherData = { 
+                name: document.getElementById('new-name').value,
                 wing: document.getElementById('new-wing').value,
                 main_subject: document.getElementById('new-subject').value,
                 ct_class: document.getElementById('new-ct-class').value,
                 ct_section: document.getElementById('new-ct-sec').value,
-                can_take_arrangement: document.getElementById('can-sub').checked,
-                is_absent: false
-            }]).select();
+                can_take_arrangement: document.getElementById('can-sub').checked
+            };
 
-            if(error) return alert(error.message);
-            const tid = teacher[0].id;
+            let tid = id;
+            if(id) {
+                await _db.from('teachers').update(teacherData).eq('id', id);
+                await _db.from('teacher_schedule').delete().eq('teacher_id', id);
+                await _db.from('free_periods').delete().eq('teacher_id', id);
+            } else {
+                const { data } = await _db.from('teachers').insert([teacherData]).select();
+                tid = data[0].id;
+            }
 
             for(let r of document.querySelectorAll('.schedule-row')) {
                 const type = r.querySelector('.r-type').value;
@@ -235,12 +265,8 @@
                         .eq('day_of_week', today)
                         .eq('period_number', s.period_number);
                     
-                    // Logic: Must be present AND must be allowed to take arrangement
                     let available = f?.filter(x => x.teachers && !x.teachers.is_absent && x.teachers.can_take_arrangement) || [];
-                    
-                    // Priority: Same wing teachers first
                     available.sort((a, b) => a.teachers.wing === t.wing ? -1 : 1);
-                    
                     const match = available[0];
 
                     html += `<div class="arr-card">
@@ -255,16 +281,33 @@
             document.getElementById('arr-list').innerHTML = html || "<div style='opacity:0.5; text-align:center; padding-top:50px;'>ALL SECURE</div>";
         }
 
-        function addEntryRow() {
+        function addEntryRow(type = 'busy', data = null) {
             const div = document.createElement('div'); div.className = "row schedule-row";
             div.innerHTML = `
-                <select class="r-day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
-                <input type="number" class="r-prd" placeholder="Prd" style="width:65px">
-                <select class="r-type" style="width:95px"><option value="busy">BUSY</option><option value="free">FREE</option></select>
-                <input type="text" class="r-cls" placeholder="Cls" style="width:55px"><input type="text" class="r-sec" placeholder="Sec" style="width:45px"><input type="text" class="r-sub" placeholder="Sub">`;
+                <select class="r-day">
+                    <option ${data?.day_of_week=='Monday'?'selected':''}>Monday</option>
+                    <option ${data?.day_of_week=='Tuesday'?'selected':''}>Tuesday</option>
+                    <option ${data?.day_of_week=='Wednesday'?'selected':''}>Wednesday</option>
+                    <option ${data?.day_of_week=='Thursday'?'selected':''}>Thursday</option>
+                    <option ${data?.day_of_week=='Friday'?'selected':''}>Friday</option>
+                    <option ${data?.day_of_week=='Saturday'?'selected':''}>Saturday</option>
+                </select>
+                <input type="number" class="r-prd" placeholder="Prd" style="width:65px" value="${data?.period_number || ''}">
+                <select class="r-type" style="width:95px">
+                    <option value="busy" ${type=='busy'?'selected':''}>BUSY</option>
+                    <option value="free" ${type=='free'?'selected':''}>FREE</option>
+                </select>
+                <input type="text" class="r-cls" placeholder="Cls" style="width:55px" value="${data?.class_name || ''}">
+                <input type="text" class="r-sec" placeholder="Sec" style="width:45px" value="${data?.section || ''}">
+                <input type="text" class="r-sub" placeholder="Sub" value="${data?.subject || ''}">`;
             document.getElementById('entry-container').appendChild(div);
         }
-        function openModal() { document.getElementById('modal').style.display='flex'; addEntryRow(); }
+        function openModal() { 
+            document.getElementById('modal').style.display='flex'; 
+            document.getElementById('modal-title').innerText = "Register Master Schedule";
+            document.getElementById('edit-id').value = '';
+            document.getElementById('new-name').value = '';
+        }
         function closeModal() { document.getElementById('modal').style.display='none'; document.getElementById('entry-container').innerHTML=''; }
     </script>
 </body>
