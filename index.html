@@ -3,221 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX | Proxy Management System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>MATRIX | GGPS Dhanbad AI v3.6</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
     <style>
-        body { background: #0f172a; color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        .glass-input { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
-        .glass-input:focus { outline: none; border-color: #22d3ee; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.5); border-radius: 4px; }
+        :root { 
+            --bg: #050507; 
+            --card: #0f111a; 
+            --primary: #0070f3; 
+            --accent: #00dfd8; 
+            --text: #ffffff; 
+            --danger: #ff0055; 
+            --success: #00ff88; 
+        }
+        
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            overflow-x: hidden; 
+        }
+
+        .grid-bg { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: linear-gradient(rgba(0, 223, 216, 0.03) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 223, 216, 0.03) 1px, transparent 1px); 
+            background-size: 30px 30px; z-index: -1; 
+        }
+
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
+        
+        #main-app { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
+
+        .glass { 
+            background: rgba(15, 17, 26, 0.8); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 16px; 
+            backdrop-filter: blur(10px); 
+            padding: 25px; 
+        }
+
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; margin-top: 20px; }
+
+        input, select { 
+            background: #161925; border: 1px solid #2d314d; color: white; 
+            padding: 12px; border-radius: 8px; margin-bottom: 10px; 
+            width: 100%; box-sizing: border-box; font-family: inherit; 
+        }
+
+        .btn { 
+            background: var(--primary); color: white; border: none; 
+            padding: 12px 24px; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; text-transform: uppercase; 
+        }
+
+        .btn:hover { background: var(--accent); color: black; box-shadow: 0 0 20px var(--accent); }
+
+        .t-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; background: rgba(255,255,255,0.03); 
+            border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); 
+        }
+
+        .status-pill { 
+            padding: 6px 12px; border-radius: 20px; font-size: 11px; 
+            font-weight: 800; cursor: pointer; border: none; min-width: 80px; 
+        }
+
+        .present { background: rgba(0, 255, 136, 0.1); color: var(--success); }
+        .absent { background: rgba(255, 0, 85, 0.1); color: var(--danger); }
+
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; 
+        }
+
+        .modal-content { 
+            background: var(--card); width: 850px; max-height: 90vh; 
+            overflow-y: auto; padding: 35px; border-radius: 20px; 
+            border: 1px solid var(--primary); 
+        }
+
+        .row { display: flex; gap: 10px; align-items: center; }
+
+        .arr-card { 
+            background: #1a1c2e; padding: 20px; border-radius: 15px; 
+            margin-bottom: 15px; border: 1px solid rgba(0, 223, 216, 0.2); 
+        }
     </style>
 </head>
-<body class="relative">
+<body>
+    <div class="grid-bg"></div>
 
-    <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 backdrop-blur-md">
-        <div class="glass p-8 rounded-2xl w-full max-w-sm text-center">
-            <h1 class="text-3xl font-bold tracking-widest text-cyan-400 mb-6">MATRIX</h1>
-            <p class="text-sm text-gray-400 mb-4">System Locked</p>
-            <input type="password" id="auth-password" placeholder="Enter password..." class="glass-input w-full p-3 rounded-lg mb-4 text-center">
-            <button onclick="checkAuth()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg transition duration-200">Unlock System</button>
+    <div id="login-screen">
+        <div class="glass" style="width: 320px; text-align: center;">
+            <h1 style="color: var(--accent); letter-spacing: -2px;">MATRIX</h1>
+            <input type="password" id="auth-pass" placeholder="Admin Password">
+            <button class="btn" style="width: 100%" onclick="unlock()">AUTHORIZE</button>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden container mx-auto px-4 py-8 max-w-7xl">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 glass p-6 rounded-2xl">
-            <div>
-                <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">MATRIX</h1>
-                <p class="text-gray-400 text-sm mt-1">School Staff Management & Proxy System</p>
+    <div id="main-app">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 id="day-display" style="color: var(--accent); margin:0;">GGPS AI</h1>
+            <button class="btn" onclick="openModal()">+ REGISTER TEACHER</button>
+        </div>
+        <div class="grid">
+            <div class="glass" style="height: 75vh; overflow-y: auto;">
+                <h3 style="color: var(--primary); margin-top:0;">STAFF DIRECTORY</h3>
+                <div id="staff-list"></div>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-4">
-                <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white py-2 px-4 rounded-lg flex items-center transition">
-                    <span>Upload CSV</span>
-                    <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
-                </label>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass p-6 rounded-2xl h-[calc(100vh-250px)] flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-cyan-400">Action Items</h2>
-                        <button onclick="runProxyEngine()" class="text-xs bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white">Refresh</button>
-                    </div>
-                    <div id="proxy-list" class="flex-1 overflow-y-auto space-y-3"></div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="glass p-6 rounded-2xl h-[calc(100vh-250px)] flex flex-col">
-                    <h2 class="text-xl font-bold mb-4 text-cyan-400">Staff Directory</h2>
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="text-gray-400 text-sm border-b border-gray-700">
-                                    <th class="pb-3 px-2">Name</th>
-                                    <th class="pb-3 px-2">Wing</th>
-                                    <th class="pb-3 px-2">CT Class</th>
-                                    <th class="pb-3 px-2 text-center">Proxy</th>
-                                    <th class="pb-3 px-2 text-center">Status</th>
-                                    <th class="pb-3 px-2 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="staff-directory" class="text-sm"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="glass" style="height: 75vh; overflow-y: auto;">
+                <h3 style="color: var(--primary); margin-top:0;">LIVE ARRANGEMENTS</h3>
+                <div id="arr-list"></div>
             </div>
         </div>
     </div>
 
-    <div id="teacher-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-80 backdrop-blur-sm p-4">
-        <div class="glass p-6 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
-            <h2 class="text-2xl font-bold text-cyan-400 mb-6">Teacher Editor</h2>
-            <input type="hidden" id="edit-id">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div><label class="block text-xs text-gray-400 mb-1">Name</label><input type="text" id="edit-name" class="glass-input w-full p-2 rounded"></div>
-                <div><label class="block text-xs text-gray-400 mb-1">Wing</label><input type="text" id="edit-wing" class="glass-input w-full p-2 rounded"></div>
-                <div><label class="block text-xs text-gray-400 mb-1">CT Class</label><input type="text" id="edit-ct" class="glass-input w-full p-2 rounded"></div>
-                <div><label class="block text-xs text-gray-400 mb-1">Proxy Eligibility</label><select id="edit-eligibility" class="glass-input w-full p-2 rounded"><option value="true">True</option><option value="false">False</option></select></div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-top:0;">Register Master Schedule</h2>
+            <div class="row">
+                <input type="text" id="new-name" placeholder="Teacher Full Name">
+                <select id="new-wing"><option value="Senior">Senior Wing</option><option value="Primary">Primary Wing</option></select>
             </div>
-            <hr class="border-gray-700 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold">Dynamic Routine</h3>
-                <button onclick="addScheduleRow()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm text-cyan-400 border border-cyan-800">+ Add Row</button>
+            <div class="row">
+                <input type="text" id="new-subject" placeholder="Main Subject">
+                <div style="display: flex; align-items: center; gap: 10px; background: #161925; padding: 10px; border-radius: 8px; flex: 1; margin-bottom: 10px;">
+                    <input type="checkbox" id="can-sub" checked style="width: 20px; margin: 0;">
+                    <label style="font-size: 11px; color: var(--accent); font-weight: bold;">AVAILABLE FOR SUBSTITUTION</label>
+                </div>
             </div>
-            <div id="schedule-container" class="space-y-3 mb-6"></div>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-6 py-2 rounded glass hover:bg-white/10 transition">Cancel</button>
-                <button onclick="saveTeacherData()" class="px-6 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition">Save Routine & Data</button>
+            <div class="row">
+                <input type="text" id="new-ct-class" placeholder="CT Class">
+                <input type="text" id="new-ct-sec" placeholder="CT Sec">
+            </div>
+            <div id="entry-container"></div>
+            <button onclick="addEntryRow()" class="btn" style="background:none; border:1px dashed var(--success); width:100%; margin-top:10px;">+ ADD PERIOD</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn" style="flex: 2" onclick="saveTeacher()">SYNC TO CLOUD</button>
+                <button class="btn" style="flex: 1; background: #334" onclick="closeModal()">CLOSE</button>
             </div>
         </div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const SB_URL = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg'; 
+        const _db = supabase.createClient(SB_URL, SB_KEY);
+        const today = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
 
-        function checkAuth() {
-            if (document.getElementById('auth-password').value === 'admin123') {
-                document.getElementById('auth-overlay').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                initSystem();
-            } else { alert('Invalid password'); }
+        function unlock() {
+            if(document.getElementById('auth-pass').value === 'admin123') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('day-display').innerText = today;
+                refresh();
+            } else { alert("ACCESS DENIED"); }
         }
 
-        async function initSystem() { await fetchTeachers(); await runProxyEngine(); }
-
-        let globalTeachers = [];
-
-        async function fetchTeachers() {
-            const { data } = await supabase.from('teachers').select('*').order('name');
-            globalTeachers = data || [];
-            renderTeachers();
+        async function refresh() {
+            const { data: t } = await _db.from('teachers').select('*').order('name');
+            document.getElementById('staff-list').innerHTML = t.map(x => `
+                <div class="t-card">
+                    <div>
+                        <div style="font-weight:bold">${x.name}</div>
+                        <div style="font-size:9px; color:${x.can_take_arrangement ? 'var(--primary)' : 'var(--danger)'}">
+                            ${x.wing} | ${x.can_take_arrangement ? 'DUTY: YES' : 'DUTY: NO'}
+                        </div>
+                    </div>
+                    <button class="status-pill ${x.is_absent ? 'absent' : 'present'}" onclick="toggleStatus('${x.id}', ${x.is_absent})">
+                        ${x.is_absent ? 'ABSENT' : 'PRESENT'}
+                    </button>
+                </div>`).join('');
+            processAI(t || []);
         }
 
-        function renderTeachers() {
-            const tbody = document.getElementById('staff-directory');
-            tbody.innerHTML = globalTeachers.map(t => `
-                <tr class="border-b border-gray-800 hover:bg-white/5">
-                    <td class="py-3 px-2">${t.name}</td>
-                    <td class="py-3 px-2">${t.wing || '-'}</td>
-                    <td class="py-3 px-2">${t.ct_class || '-'}</td>
-                    <td class="py-3 px-2 text-center">${t.can_take_proxy ? 'Yes' : 'No'}</td>
-                    <td class="py-3 px-2 text-center">
-                        <button onclick="toggleAbsent('${t.id}', ${t.is_absent})" class="px-3 py-1 rounded text-xs font-bold ${t.is_absent ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}">
-                            ${t.is_absent ? 'ABSENT' : 'PRESENT'}
-                        </button>
-                    </td>
-                    <td class="py-3 px-2 text-right"><button onclick="openModal('${t.id}')" class="text-cyan-400 underline text-xs">Edit</button></td>
-                </tr>
-            `).join('');
+        async function toggleStatus(id, s) { 
+            await _db.from('teachers').update({is_absent: !s}).eq('id', id); 
+            refresh(); 
         }
 
-        async function toggleAbsent(id, cur) {
-            await supabase.from('teachers').update({ is_absent: !cur }).eq('id', id);
-            await fetchTeachers(); await runProxyEngine();
+        async function saveTeacher() {
+            const name = document.getElementById('new-name').value;
+            if(!name) return alert("Name is required");
+
+            const { data: teacher, error } = await _db.from('teachers').insert([{ 
+                name: name,
+                wing: document.getElementById('new-wing').value,
+                main_subject: document.getElementById('new-subject').value,
+                ct_class: document.getElementById('new-ct-class').value,
+                ct_section: document.getElementById('new-ct-sec').value,
+                can_take_arrangement: document.getElementById('can-sub').checked,
+                is_absent: false
+            }]).select();
+
+            if(error) return alert(error.message);
+            const tid = teacher[0].id;
+
+            for(let r of document.querySelectorAll('.schedule-row')) {
+                const type = r.querySelector('.r-type').value;
+                const prd = r.querySelector('.r-prd').value;
+                const day = r.querySelector('.r-day').value;
+                if(!prd) continue;
+
+                if(type === 'busy') {
+                    await _db.from('teacher_schedule').insert([{
+                        teacher_id: tid, day_of_week: day, period_number: prd,
+                        class_name: r.querySelector('.r-cls').value,
+                        section: r.querySelector('.r-sec').value,
+                        subject: r.querySelector('.r-sub').value
+                    }]);
+                } else { 
+                    await _db.from('free_periods').insert([{
+                        teacher_id: tid, day_of_week: day, period_number: prd
+                    }]); 
+                }
+            }
+            closeModal(); 
+            refresh();
         }
 
-        async function openModal(id) {
-            const t = globalTeachers.find(x => x.id === id);
-            document.getElementById('edit-id').value = t.id;
-            document.getElementById('edit-name').value = t.name;
-            document.getElementById('edit-wing').value = t.wing || '';
-            document.getElementById('edit-ct').value = t.ct_class || '';
-            document.getElementById('edit-eligibility').value = t.can_take_proxy ? 'true' : 'false';
-            document.getElementById('schedule-container').innerHTML = '';
-            
-            const { data: sched } = await supabase.from('teacher_schedule').select('*').eq('teacher_id', id);
-            const { data: free } = await supabase.from('free_periods').select('*').eq('teacher_id', id);
-            sched?.forEach(s => addScheduleRow(s.day_of_week, s.period_number, 'Busy', s.class_name, s.section, s.subject));
-            free?.forEach(f => addScheduleRow(f.day_of_week, f.period_number, 'Free'));
-            document.getElementById('teacher-modal').classList.remove('hidden');
+        async function processAI(all) {
+            const absents = all.filter(t => t.is_absent);
+            let html = "";
+            for(let t of absents) {
+                const { data: slots } = await _db.from('teacher_schedule').select('*').eq('teacher_id', t.id).eq('day_of_week', today);
+                for(let s of slots) {
+                    const { data: f } = await _db.from('free_periods')
+                        .select('teacher_id, teachers(name, is_absent, can_take_arrangement, wing)')
+                        .eq('day_of_week', today)
+                        .eq('period_number', s.period_number);
+                    
+                    // Logic: Must be present AND must be allowed to take arrangement
+                    let available = f?.filter(x => x.teachers && !x.teachers.is_absent && x.teachers.can_take_arrangement) || [];
+                    
+                    // Priority: Same wing teachers first
+                    available.sort((a, b) => a.teachers.wing === t.wing ? -1 : 1);
+                    
+                    const match = available[0];
+
+                    html += `<div class="arr-card">
+                        <span style="color:var(--accent)">PRD ${s.period_number} | ${s.class_name}-${s.section}</span><br>
+                        <small>Absent: ${t.name}</small>
+                        <div style="margin-top:10px; font-weight:bold; color:var(--success)">
+                            SUGGESTION: ${match ? match.teachers.name : 'NO ELIGIBLE STAFF'}
+                        </div>
+                    </div>`;
+                }
+            }
+            document.getElementById('arr-list').innerHTML = html || "<div style='opacity:0.5; text-align:center; padding-top:50px;'>ALL SECURE</div>";
         }
 
-        function addScheduleRow(d='Monday', p=1, type='Busy', cls='', sec='', sub='') {
-            const container = document.getElementById('schedule-container');
-            const div = document.createElement('div');
-            div.className = 'schedule-row flex flex-wrap md:flex-nowrap gap-2 items-center bg-gray-800/50 p-3 rounded border border-gray-700';
+        function addEntryRow() {
+            const div = document.createElement('div'); div.className = "row schedule-row";
             div.innerHTML = `
-                <select class="row-day glass-input p-2 rounded text-sm"><option ${d==='Monday'?'selected':''}>Monday</option><option ${d==='Tuesday'?'selected':''}>Tuesday</option><option ${d==='Wednesday'?'selected':''}>Wednesday</option><option ${d==='Thursday'?'selected':''}>Thursday</option><option ${d==='Friday'?'selected':''}>Friday</option></select>
-                <input type="number" class="row-period glass-input w-16 p-2 rounded text-sm" value="${p}">
-                <select class="row-type glass-input p-2 rounded text-sm"><option ${type==='Busy'?'selected':''}>Busy</option><option ${type==='Free'?'selected':''}>Free</option></select>
-                <input type="text" class="row-class glass-input w-20 p-2 rounded text-sm" placeholder="Class" value="${cls}">
-                <input type="text" class="row-section glass-input w-20 p-2 rounded text-sm" placeholder="Sec" value="${sec}">
-                <input type="text" class="row-subject glass-input flex-1 p-2 rounded text-sm" placeholder="Subject" value="${sub}">
-                <button onclick="this.parentElement.remove()" class="text-red-400 font-bold px-2">&times;</button>
-            `;
-            container.appendChild(div);
+                <select class="r-day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
+                <input type="number" class="r-prd" placeholder="Prd" style="width:65px">
+                <select class="r-type" style="width:95px"><option value="busy">BUSY</option><option value="free">FREE</option></select>
+                <input type="text" class="r-cls" placeholder="Cls" style="width:55px"><input type="text" class="r-sec" placeholder="Sec" style="width:45px"><input type="text" class="r-sub" placeholder="Sub">`;
+            document.getElementById('entry-container').appendChild(div);
         }
-
-        async function saveTeacherData() {
-            const id = document.getElementById('edit-id').value;
-            await supabase.from('teachers').update({ name: document.getElementById('edit-name').value, wing: document.getElementById('edit-wing').value, ct_class: document.getElementById('edit-ct').value, can_take_proxy: document.getElementById('edit-eligibility').value === 'true' }).eq('id', id);
-            await supabase.from('teacher_schedule').delete().eq('teacher_id', id);
-            await supabase.from('free_periods').delete().eq('teacher_id', id);
-            
-            const rows = document.querySelectorAll('.schedule-row');
-            const scheds = [], frees = [];
-            rows.forEach(r => {
-                const type = r.querySelector('.row-type').value;
-                if(type === 'Busy') scheds.push({ teacher_id: id, day_of_week: r.querySelector('.row-day').value, period_number: r.querySelector('.row-period').value, class_name: r.querySelector('.row-class').value, section: r.querySelector('.row-section').value, subject: r.querySelector('.row-subject').value });
-                else frees.push({ teacher_id: id, day_of_week: r.querySelector('.row-day').value, period_number: r.querySelector('.row-period').value });
-            });
-            if(scheds.length) await supabase.from('teacher_schedule').insert(scheds);
-            if(frees.length) await supabase.from('free_periods').insert(frees);
-            closeModal(); fetchTeachers(); runProxyEngine();
-        }
-
-        async function runProxyEngine() {
-            const list = document.getElementById('proxy-list');
-            const day = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()] || 'Monday';
-            const { data: missing } = await supabase.from('teacher_schedule').select('*, teachers(name)').in('teacher_id', globalTeachers.filter(t=>t.is_absent).map(t=>t.id)).eq('day_of_week', day);
-            list.innerHTML = missing?.map(i => `
-                <div class="p-3 bg-red-900/20 border border-red-500/20 rounded-lg">
-                    <div class="flex justify-between text-xs font-bold text-white"><span>Period ${i.period_number}</span><span>${i.teachers.name}</span></div>
-                    <div class="font-bold text-lg">${i.class_name}-${i.section}</div>
-                    <div class="text-sm text-cyan-300">${i.subject}</div>
-                </div>
-            `).join('') || '<p class="text-gray-400 text-sm">No proxy needed today.</p>';
-        }
-
-        function closeModal() { document.getElementById('teacher-modal').classList.add('hidden'); }
-        async function handleCSVUpload(e) {
-            const file = e.target.files[0];
-            Papa.parse(file, { header: true, complete: async (r) => { 
-                await supabase.from('teachers').insert(r.data.map(d=>({name:d.name, wing:d.wing, ct_class:d.ct_class, can_take_proxy:true}))); 
-                fetchTeachers(); 
-            }});
-        }
+        function openModal() { document.getElementById('modal').style.display='flex'; addEntryRow(); }
+        function closeModal() { document.getElementById('modal').style.display='none'; document.getElementById('entry-container').innerHTML=''; }
     </script>
 </body>
 </html>
