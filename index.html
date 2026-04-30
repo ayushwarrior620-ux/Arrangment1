@@ -3,226 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX | GGPS Dhanbad AI v3.6</title>
+    <title>MATRIX | GGPS Dhanbad AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        :root { 
-            --bg: #050507; 
-            --card: #0f111a; 
-            --primary: #0070f3; 
-            --accent: #00dfd8; 
-            --text: #ffffff; 
-            --danger: #ff0055; 
-            --success: #00ff88; 
-        }
-        
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            overflow-x: hidden; 
-        }
-
-        .grid-bg { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background-image: linear-gradient(rgba(0, 223, 216, 0.03) 1px, transparent 1px), 
-                              linear-gradient(90deg, rgba(0, 223, 216, 0.03) 1px, transparent 1px); 
-            background-size: 30px 30px; z-index: -1; 
-        }
-
-        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
-        
-        #main-app { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
-
-        .glass { 
-            background: rgba(15, 17, 26, 0.8); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 16px; 
-            backdrop-filter: blur(10px); 
-            padding: 25px; 
-        }
-
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; margin-top: 20px; }
-
-        input, select { 
-            background: #161925; border: 1px solid #2d314d; color: white; 
-            padding: 12px; border-radius: 8px; margin-bottom: 10px; 
-            width: 100%; box-sizing: border-box; font-family: inherit; 
-        }
-
-        .btn { 
-            background: var(--primary); color: white; border: none; 
-            padding: 12px 24px; border-radius: 8px; cursor: pointer; 
-            font-weight: bold; transition: 0.3s; text-transform: uppercase; 
-        }
-
-        .btn:hover { background: var(--accent); color: black; box-shadow: 0 0 20px var(--accent); }
-
-        .t-card { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px; background: rgba(255,255,255,0.03); 
-            border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); 
-        }
-
-        .status-pill { 
-            padding: 6px 12px; border-radius: 20px; font-size: 11px; 
-            font-weight: 800; cursor: pointer; border: none; min-width: 80px; 
-        }
-
-        .present { background: rgba(0, 255, 136, 0.1); color: var(--success); }
-        .absent { background: rgba(255, 0, 85, 0.1); color: var(--danger); }
-
-        .modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; 
-        }
-
-        .modal-content { 
-            background: var(--card); width: 850px; max-height: 90vh; 
-            overflow-y: auto; padding: 35px; border-radius: 20px; 
-            border: 1px solid var(--primary); 
-        }
-
-        .row { display: flex; gap: 10px; align-items: center; }
-
-        .arr-card { 
-            background: #1a1c2e; padding: 20px; border-radius: 15px; 
-            margin-bottom: 15px; border: 1px solid rgba(0, 223, 216, 0.2); 
-        }
+        body { background-color: #050507; color: white; }
+        .glass { background: rgba(15, 17, 26, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
-    <div class="grid-bg"></div>
+<body class="min-h-screen p-4 md:p-8">
 
-    <div id="login-screen">
-        <div class="glass" style="width: 320px; text-align: center;">
-            <h1 style="color: var(--accent); letter-spacing: -2px;">MATRIX</h1>
-            <input type="password" id="auth-pass" placeholder="Admin Password">
-            <button class="btn" style="width: 100%" onclick="unlock()">AUTHORIZE</button>
+    <div id="login-screen" class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="glass p-8 rounded-2xl w-80 text-center shadow-2xl">
+            <h1 class="text-3xl font-bold text-cyan-400 mb-6">MATRIX</h1>
+            <input type="password" id="auth-pass" placeholder="Admin Password" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg mb-4 text-white">
+            <button onclick="unlock()" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-cyan-500 transition">AUTHORIZE</button>
         </div>
     </div>
 
-    <div id="main-app">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 id="day-display" style="color: var(--accent); margin:0;">GGPS AI</h1>
-            <button class="btn" onclick="openModal()">+ REGISTER TEACHER</button>
-        </div>
-        <div class="grid">
-            <div class="glass" style="height: 75vh; overflow-y: auto;">
-                <h3 style="color: var(--primary); margin-top:0;">STAFF DIRECTORY</h3>
+    <div id="main-app" class="hidden max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-cyan-400">MATRIX v3.6</h1>
+            <div class="flex gap-3">
+                <button onclick="openModal()" class="bg-blue-600 px-6 py-2 rounded-lg font-bold hover:bg-cyan-500">+ ADD TEACHER</button>
+                <button onclick="document.getElementById('csv-file').click()" class="bg-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-600">IMPORT CSV</button>
+                <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="uploadCSV(event)">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass p-6 rounded-2xl h-[70vh] overflow-y-auto">
+                <h3 class="text-xl font-bold text-blue-400 mb-4">STAFF DIRECTORY</h3>
                 <div id="staff-list"></div>
             </div>
-            <div class="glass" style="height: 75vh; overflow-y: auto;">
-                <h3 style="color: var(--primary); margin-top:0;">LIVE ARRANGEMENTS</h3>
+            <div class="glass p-6 rounded-2xl h-[70vh] overflow-y-auto">
+                <h3 class="text-xl font-bold text-cyan-400 mb-4">LIVE ARRANGEMENTS</h3>
                 <div id="arr-list"></div>
             </div>
         </div>
     </div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--accent); margin-top:0;">Register Master Schedule</h2>
-            <div class="row">
-                <input type="text" id="new-name" placeholder="Teacher Full Name">
-                <select id="new-wing"><option value="Senior">Senior Wing</option><option value="Primary">Primary Wing</option></select>
-            </div>
-            <div class="row">
-                <input type="text" id="new-subject" placeholder="Main Subject">
-                <div style="display: flex; align-items: center; gap: 10px; background: #161925; padding: 10px; border-radius: 8px; flex: 1; margin-bottom: 10px;">
-                    <input type="checkbox" id="can-sub" checked style="width: 20px; margin: 0;">
-                    <label style="font-size: 11px; color: var(--accent); font-weight: bold;">AVAILABLE FOR SUBSTITUTION</label>
-                </div>
-            </div>
-            <div class="row">
-                <input type="text" id="new-ct-class" placeholder="CT Class">
-                <input type="text" id="new-ct-sec" placeholder="CT Sec">
-            </div>
-            <div id="entry-container"></div>
-            <button onclick="addEntryRow()" class="btn" style="background:none; border:1px dashed var(--success); width:100%; margin-top:10px;">+ ADD PERIOD</button>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn" style="flex: 2" onclick="saveTeacher()">SYNC TO CLOUD</button>
-                <button class="btn" style="flex: 1; background: #334" onclick="closeModal()">CLOSE</button>
-            </div>
-        </div>
-    </div>
-
     <script>
+        // REPLACE THESE WITH YOUR KEYS
         const SB_URL = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg'; 
         const _db = supabase.createClient(SB_URL, SB_KEY);
         const today = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
 
-        function unlock() {
-            if(document.getElementById('auth-pass').value === 'admin123') {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                document.getElementById('day-display').innerText = today;
-                refresh();
-            } else { alert("ACCESS DENIED"); }
+        function unlock() { 
+            if(document.getElementById('auth-pass').value === 'admin123') { 
+                document.getElementById('login-screen').classList.add('hidden'); 
+                document.getElementById('main-app').classList.remove('hidden'); 
+                refresh(); 
+            } else { alert("ACCESS DENIED"); } 
+        }
+
+        async function uploadCSV(event) {
+            const file = event.target.files[0];
+            Papa.parse(file, { header: true, complete: async (results) => {
+                const { error } = await _db.from('teachers').insert(results.data);
+                if(error) alert("Error: " + error.message); else { alert("Sync Complete!"); refresh(); }
+            }});
         }
 
         async function refresh() {
             const { data: t } = await _db.from('teachers').select('*').order('name');
             document.getElementById('staff-list').innerHTML = t.map(x => `
-                <div class="t-card">
-                    <div>
-                        <div style="font-weight:bold">${x.name}</div>
-                        <div style="font-size:9px; color:${x.can_take_arrangement ? 'var(--primary)' : 'var(--danger)'}">
-                            ${x.wing} | ${x.can_take_arrangement ? 'DUTY: YES' : 'DUTY: NO'}
-                        </div>
-                    </div>
-                    <button class="status-pill ${x.is_absent ? 'absent' : 'present'}" onclick="toggleStatus('${x.id}', ${x.is_absent})">
+                <div class="glass p-4 rounded-xl mb-3 flex justify-between items-center border-l-4 ${x.can_take_arrangement ? 'border-blue-500' : 'border-red-500'}">
+                    <div><div class="font-bold">${x.name}</div><div class="text-[10px] text-gray-400">${x.wing}</div></div>
+                    <button onclick="toggleStatus('${x.id}', ${x.is_absent})" class="px-4 py-1 rounded-full text-xs font-bold ${x.is_absent ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}">
                         ${x.is_absent ? 'ABSENT' : 'PRESENT'}
                     </button>
                 </div>`).join('');
             processAI(t || []);
         }
 
-        async function toggleStatus(id, s) { 
-            await _db.from('teachers').update({is_absent: !s}).eq('id', id); 
-            refresh(); 
-        }
-
-        async function saveTeacher() {
-            const name = document.getElementById('new-name').value;
-            if(!name) return alert("Name is required");
-
-            const { data: teacher, error } = await _db.from('teachers').insert([{ 
-                name: name,
-                wing: document.getElementById('new-wing').value,
-                main_subject: document.getElementById('new-subject').value,
-                ct_class: document.getElementById('new-ct-class').value,
-                ct_section: document.getElementById('new-ct-sec').value,
-                can_take_arrangement: document.getElementById('can-sub').checked,
-                is_absent: false
-            }]).select();
-
-            if(error) return alert(error.message);
-            const tid = teacher[0].id;
-
-            for(let r of document.querySelectorAll('.schedule-row')) {
-                const type = r.querySelector('.r-type').value;
-                const prd = r.querySelector('.r-prd').value;
-                const day = r.querySelector('.r-day').value;
-                if(!prd) continue;
-
-                if(type === 'busy') {
-                    await _db.from('teacher_schedule').insert([{
-                        teacher_id: tid, day_of_week: day, period_number: prd,
-                        class_name: r.querySelector('.r-cls').value,
-                        section: r.querySelector('.r-sec').value,
-                        subject: r.querySelector('.r-sub').value
-                    }]);
-                } else { 
-                    await _db.from('free_periods').insert([{
-                        teacher_id: tid, day_of_week: day, period_number: prd
-                    }]); 
-                }
-            }
-            closeModal(); 
-            refresh();
-        }
+        async function toggleStatus(id, s) { await _db.from('teachers').update({is_absent: !s}).eq('id', id); refresh(); }
 
         async function processAI(all) {
             const absents = all.filter(t => t.is_absent);
@@ -230,42 +87,19 @@
             for(let t of absents) {
                 const { data: slots } = await _db.from('teacher_schedule').select('*').eq('teacher_id', t.id).eq('day_of_week', today);
                 for(let s of slots) {
-                    const { data: f } = await _db.from('free_periods')
-                        .select('teacher_id, teachers(name, is_absent, can_take_arrangement, wing)')
-                        .eq('day_of_week', today)
-                        .eq('period_number', s.period_number);
-                    
-                    // Logic: Must be present AND must be allowed to take arrangement
+                    const { data: f } = await _db.from('free_periods').select('teacher_id, teachers(name, is_absent, can_take_arrangement, wing)').eq('day_of_week', today).eq('period_number', s.period_number);
                     let available = f?.filter(x => x.teachers && !x.teachers.is_absent && x.teachers.can_take_arrangement) || [];
-                    
-                    // Priority: Same wing teachers first
                     available.sort((a, b) => a.teachers.wing === t.wing ? -1 : 1);
-                    
                     const match = available[0];
-
-                    html += `<div class="arr-card">
-                        <span style="color:var(--accent)">PRD ${s.period_number} | ${s.class_name}-${s.section}</span><br>
-                        <small>Absent: ${t.name}</small>
-                        <div style="margin-top:10px; font-weight:bold; color:var(--success)">
-                            SUGGESTION: ${match ? match.teachers.name : 'NO ELIGIBLE STAFF'}
-                        </div>
+                    html += `<div class="glass p-4 rounded-xl mb-3 border-cyan-900/50">
+                        <div class="text-cyan-400 text-sm font-bold">PRD ${s.period_number} | ${s.class_name}-${s.section}</div>
+                        <div class="text-xs text-gray-400">Absent: ${t.name}</div>
+                        <div class="font-bold text-green-400 mt-2">SUGGESTION: ${match ? match.teachers.name : 'NO ELIGIBLE STAFF'}</div>
                     </div>`;
                 }
             }
-            document.getElementById('arr-list').innerHTML = html || "<div style='opacity:0.5; text-align:center; padding-top:50px;'>ALL SECURE</div>";
+            document.getElementById('arr-list').innerHTML = html || "<div class='text-center text-gray-600 mt-10'>ALL SECURE</div>";
         }
-
-        function addEntryRow() {
-            const div = document.createElement('div'); div.className = "row schedule-row";
-            div.innerHTML = `
-                <select class="r-day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
-                <input type="number" class="r-prd" placeholder="Prd" style="width:65px">
-                <select class="r-type" style="width:95px"><option value="busy">BUSY</option><option value="free">FREE</option></select>
-                <input type="text" class="r-cls" placeholder="Cls" style="width:55px"><input type="text" class="r-sec" placeholder="Sec" style="width:45px"><input type="text" class="r-sub" placeholder="Sub">`;
-            document.getElementById('entry-container').appendChild(div);
-        }
-        function openModal() { document.getElementById('modal').style.display='flex'; addEntryRow(); }
-        function closeModal() { document.getElementById('modal').style.display='none'; document.getElementById('entry-container').innerHTML=''; }
     </script>
 </body>
 </html>
