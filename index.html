@@ -3,103 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX | GGPS Dhanbad AI</title>
+    <title>MATRIX v4.0 | GGPS AI System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background-color: #050507; color: white; }
-        .glass { background: rgba(15, 17, 26, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        body { background-color: #050507; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(15, 17, 26, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
-    <div id="login-screen" class="fixed inset-0 flex items-center justify-center z-50">
-        <div class="glass p-8 rounded-2xl w-80 text-center shadow-2xl">
-            <h1 class="text-3xl font-bold text-cyan-400 mb-6">MATRIX</h1>
-            <input type="password" id="auth-pass" placeholder="Admin Password" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg mb-4 text-white">
-            <button onclick="unlock()" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-cyan-500 transition">AUTHORIZE</button>
-        </div>
-    </div>
-
-    <div id="main-app" class="hidden max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-cyan-400">MATRIX v3.6</h1>
+    <div class="max-w-7xl mx-auto">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-4xl font-black text-cyan-400 tracking-tighter">MATRIX <span class="text-white/20 text-xl font-medium">v4.0</span></h1>
+                <p class="text-gray-500 font-bold uppercase text-xs tracking-widest mt-1" id="day-display">Initializing...</p>
+            </div>
             <div class="flex gap-3">
-                <button onclick="openModal()" class="bg-blue-600 px-6 py-2 rounded-lg font-bold hover:bg-cyan-500">+ ADD TEACHER</button>
-                <button onclick="document.getElementById('csv-file').click()" class="bg-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-600">IMPORT CSV</button>
+                <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-900/20">+ ADD TEACHER</button>
+                <button onclick="document.getElementById('csv-file').click()" class="bg-slate-800 hover:bg-slate-700 px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-700 transition-all">IMPORT CSV</button>
                 <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="uploadCSV(event)">
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass p-6 rounded-2xl h-[70vh] overflow-y-auto">
-                <h3 class="text-xl font-bold text-blue-400 mb-4">STAFF DIRECTORY</h3>
-                <div id="staff-list"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-5 glass rounded-3xl p-6 h-[75vh] flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-black text-gray-300">STAFF DIRECTORY</h3>
+                    <span id="staff-count" class="text-xs bg-slate-800 px-2 py-1 rounded text-gray-400">0 Total</span>
+                </div>
+                <div id="staff-list" class="space-y-3 overflow-y-auto custom-scroll pr-2 flex-grow">
+                    </div>
             </div>
-            <div class="glass p-6 rounded-2xl h-[70vh] overflow-y-auto">
-                <h3 class="text-xl font-bold text-cyan-400 mb-4">LIVE ARRANGEMENTS</h3>
-                <div id="arr-list"></div>
+
+            <div class="lg:col-span-7 glass rounded-3xl p-6 h-[75vh] flex flex-col border-cyan-900/20 shadow-[0_0_50px_-12px_rgba(34,211,238,0.1)]">
+                <h3 class="text-lg font-black text-cyan-400 mb-6 flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                    </span>
+                    LIVE AI SUGGESTIONS
+                </h3>
+                <div id="ai-list" class="space-y-4 overflow-y-auto custom-scroll pr-2 flex-grow">
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto border-white/10 shadow-2xl">
+            <h2 class="text-2xl font-black text-cyan-400 mb-6">Register New Faculty</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase">Full Name</label>
+                    <input type="text" id="t-name" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 focus:border-cyan-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase">Wing</label>
+                    <select id="t-wing" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 focus:border-cyan-500 outline-none">
+                        <option>Senior</option>
+                        <option>Primary</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase">Proxy Eligibility</label>
+                    <select id="t-proxy" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 focus:border-cyan-500 outline-none">
+                        <option value="true">YES - Can take proxies</option>
+                        <option value="false">NO - Proxy Exempt (Rule 2)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase">CT Class (Optional)</label>
+                    <input type="text" id="t-class" placeholder="e.g. 10A" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 focus:border-cyan-500 outline-none">
+                </div>
+            </div>
+
+            <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">Weekly Schedule Configuration</h4>
+            <div id="schedule-container" class="space-y-3"></div>
+            
+            <button onclick="addScheduleRow()" class="w-full mt-4 py-2 border-2 border-dashed border-slate-700 rounded-xl text-slate-500 font-bold text-sm hover:text-slate-300 hover:border-slate-500 transition">+ ADD TIME SLOT</button>
+
+            <div class="flex gap-4 mt-10">
+                <button onclick="saveTeacher()" class="flex-grow bg-cyan-500 hover:bg-cyan-400 py-4 rounded-2xl font-black text-black transition-all shadow-lg shadow-cyan-500/20 uppercase tracking-tighter">Sync to Matrix Cloud</button>
+                <button onclick="closeModal()" class="bg-slate-800 px-8 rounded-2xl font-bold hover:bg-slate-700 transition">CANCEL</button>
             </div>
         </div>
     </div>
 
     <script>
-        // REPLACE THESE WITH YOUR KEYS
+        // --- CONFIGURATION ---
         const SB_URL = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg'; 
         const _db = supabase.createClient(SB_URL, SB_KEY);
-        const today = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+        const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const today = days[new Date().getDay()];
+        document.getElementById('day-display').innerText = `ROUTINE STATUS: ${today.toUpperCase()}`;
 
-        function unlock() { 
-            if(document.getElementById('auth-pass').value === 'admin123') { 
-                document.getElementById('login-screen').classList.add('hidden'); 
-                document.getElementById('main-app').classList.remove('hidden'); 
-                refresh(); 
-            } else { alert("ACCESS DENIED"); } 
-        }
-
-        async function uploadCSV(event) {
-            const file = event.target.files[0];
-            Papa.parse(file, { header: true, complete: async (results) => {
-                const { error } = await _db.from('teachers').insert(results.data);
-                if(error) alert("Error: " + error.message); else { alert("Sync Complete!"); refresh(); }
-            }});
-        }
-
+        // --- CORE FUNCTIONS ---
         async function refresh() {
-            const { data: t } = await _db.from('teachers').select('*').order('name');
-            document.getElementById('staff-list').innerHTML = t.map(x => `
-                <div class="glass p-4 rounded-xl mb-3 flex justify-between items-center border-l-4 ${x.can_take_arrangement ? 'border-blue-500' : 'border-red-500'}">
-                    <div><div class="font-bold">${x.name}</div><div class="text-[10px] text-gray-400">${x.wing}</div></div>
-                    <button onclick="toggleStatus('${x.id}', ${x.is_absent})" class="px-4 py-1 rounded-full text-xs font-bold ${x.is_absent ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}">
-                        ${x.is_absent ? 'ABSENT' : 'PRESENT'}
-                    </button>
-                </div>`).join('');
-            processAI(t || []);
+            const { data: teachers, error } = await _db.from('teachers').select('*').order('name');
+            if(error) return alert("Connection Error");
+            
+            document.getElementById('staff-count').innerText = `${teachers.length} FACULTY`;
+            renderStaff(teachers);
+            processAI(teachers);
         }
 
-        async function toggleStatus(id, s) { await _db.from('teachers').update({is_absent: !s}).eq('id', id); refresh(); }
+        function renderStaff(list) {
+            const container = document.getElementById('staff-list');
+            container.innerHTML = list.map(t => `
+                <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl flex justify-between items-center group hover:border-slate-600 transition-all">
+                    <div>
+                        <div class="font-bold text-gray-200 group-hover:text-white">${t.name}</div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase mt-1">
+                            ${t.wing} Wing ${t.ct_class ? `| CT: ${t.ct_class}` : ''} 
+                            <span class="ml-2 ${t.can_take_proxy ? 'text-cyan-800' : 'text-red-900'}">
+                                ${t.can_take_proxy ? `LOAD: ${t.proxy_count || 0}` : 'EXEMPT'}
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="toggleAbsence('${t.id}', ${t.is_absent})" 
+                        class="px-4 py-2 rounded-xl text-[10px] font-black transition-all ${t.is_absent ? 'bg-red-500/20 text-red-500 border border-red-500/30 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]' : 'bg-slate-800 text-slate-400 hover:bg-green-500/10 hover:text-green-500'}">
+                        ${t.is_absent ? 'ABSENT' : 'MARK ABSENT'}
+                    </button>
+                </div>
+            `).join('');
+        }
 
+        async function toggleAbsence(id, current) {
+            await _db.from('teachers').update({ is_absent: !current }).eq('id', id);
+            refresh();
+        }
+
+        // --- AI LOGIC (The Brain) ---
         async function processAI(all) {
-            const absents = all.filter(t => t.is_absent);
+            const container = document.getElementById('ai-list');
+            const absentees = all.filter(t => t.is_absent);
+
+            if (absentees.length === 0) {
+                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-700 py-20 border-2 border-dashed border-slate-900 rounded-3xl"><p class="font-black text-xl mb-1">ALL CLASSROOMS SECURE</p><p class="text-sm">No teacher absences reported.</p></div>`;
+                return;
+            }
+
             let html = "";
-            for(let t of absents) {
-                const { data: slots } = await _db.from('teacher_schedule').select('*').eq('teacher_id', t.id).eq('day_of_week', today);
-                for(let s of slots) {
-                    const { data: f } = await _db.from('free_periods').select('teacher_id, teachers(name, is_absent, can_take_arrangement, wing)').eq('day_of_week', today).eq('period_number', s.period_number);
-                    let available = f?.filter(x => x.teachers && !x.teachers.is_absent && x.teachers.can_take_arrangement) || [];
-                    available.sort((a, b) => a.teachers.wing === t.wing ? -1 : 1);
-                    const match = available[0];
-                    html += `<div class="glass p-4 rounded-xl mb-3 border-cyan-900/50">
-                        <div class="text-cyan-400 text-sm font-bold">PRD ${s.period_number} | ${s.class_name}-${s.section}</div>
-                        <div class="text-xs text-gray-400">Absent: ${t.name}</div>
-                        <div class="font-bold text-green-400 mt-2">SUGGESTION: ${match ? match.teachers.name : 'NO ELIGIBLE STAFF'}</div>
-                    </div>`;
+            for (let abs of absentees) {
+                const { data: schedule } = await _db.from('teacher_schedule').select('*').eq('teacher_id', abs.id).eq('day_of_week', today);
+                
+                for (let slot of schedule) {
+                    // Logic Tier 1 & 2: Get Free teachers who are PRESENT and ELIGIBLE (Rule 2)
+                    const { data: freeData } = await _db.from('free_periods').select('teacher_id, teachers(*)').eq('day_of_week', today).eq('period_number', slot.period_number);
+                    
+                    let candidates = freeData?.map(f => f.teachers).filter(t => t && !t.is_absent && t.can_take_proxy) || [];
+
+                    // Logic Tier 3: Sorting (Wing Match + Fairness Proxy Count)
+                    candidates.sort((a, b) => {
+                        let scoreA = 0; let scoreB = 0;
+                        if (a.wing === abs.wing) scoreA += 100; // Priority to same wing
+                        if (b.wing === abs.wing) scoreB += 100;
+                        scoreA -= (a.proxy_count || 0) * 10; // Deduct points for higher workload
+                        scoreB -= (b.proxy_count || 0) * 10;
+                        return scoreB - scoreA;
+                    });
+
+                    const match = candidates[0];
+
+                    html += `
+                        <div class="bg-slate-900/60 border ${match ? 'border-cyan-900/30' : 'border-red-900/30'} p-5 rounded-3xl shadow-xl">
+                            <div class="flex justify-between mb-4">
+                                <div>
+                                    <span class="text-xs bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded font-black tracking-tighter uppercase">Period ${slot.period_number}</span>
+                                    <h4 class="text-xl font-black mt-2">${slot.class_name}-${slot.section}</h4>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-500 uppercase font-bold">Absent Staff</span>
+                                    <div class="text-red-400 font-bold">${abs.name}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 rounded-2xl ${match ? 'bg-cyan-500/5 border border-cyan-500/10' : 'bg-red-500/5 border border-red-500/10'}">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">AI Recommended Substitute</span>
+                                ${match ? `
+                                    <div class="flex justify-between items-center mt-2">
+                                        <div class="font-black text-lg text-green-400">${match.name} <span class="text-xs text-slate-500 font-normal ml-2">Load: ${match.proxy_count}</span></div>
+                                        <button onclick="assignProxy('${match.id}', '${abs.id}', ${slot.period_number}, '${slot.class_name}')" class="bg-cyan-500 text-black px-4 py-1.5 rounded-lg font-black text-[10px] hover:scale-105 transition">CONFIRM</button>
+                                    </div>
+                                ` : `<div class="text-red-500 font-black mt-1">NO ELIGIBLE STAFF AVAILABLE</div>`}
+                            </div>
+                        </div>
+                    `;
                 }
             }
-            document.getElementById('arr-list').innerHTML = html || "<div class='text-center text-gray-600 mt-10'>ALL SECURE</div>";
+            container.innerHTML = html;
         }
+
+        async function assignProxy(subId, absId, prd, cls) {
+            // Update the Fairness Counter
+            const { data: current } = await _db.from('teachers').select('proxy_count').eq('id', subId).single();
+            await _db.from('teachers').update({ proxy_count: (current.proxy_count || 0) + 1 }).eq('id', subId);
+            
+            // Log to History
+            await _db.from('proxy_history').insert({
+                absent_teacher_id: absId,
+                substitute_teacher_id: subId,
+                period_number: prd,
+                class_name: cls
+            });
+            
+            alert("Proxy assigned & Teacher Load updated.");
+            refresh();
+        }
+
+        // --- BULK IMPORT ---
+        async function uploadCSV(event) {
+            const file = event.target.files[0];
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async (results) => {
+                    const { error } = await _db.from('teachers').insert(results.data);
+                    if(error) alert(error.message); else { alert("Bulk Import Success!"); refresh(); }
+                }
+            });
+        }
+
+        // --- MODAL LOGIC ---
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); addScheduleRow(); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('schedule-container').innerHTML = ''; }
+        
+        function addScheduleRow() {
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center bg-slate-800/30 p-2 rounded-xl border border-slate-800";
+            div.innerHTML = `
+                <select class="r-day bg-transparent text-xs outline-none flex-grow"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
+                <input type="number" class="r-prd w-12 bg-slate-900 p-2 rounded text-center text-xs" placeholder="Prd">
+                <select class="r-type bg-slate-900 p-2 rounded text-xs"><option value="busy">BUSY</option><option value="free">FREE</option></select>
+                <input type="text" class="r-cls w-16 bg-slate-900 p-2 rounded text-xs" placeholder="Class">
+            `;
+            document.getElementById('schedule-container').appendChild(div);
+        }
+
+        async function saveTeacher() {
+            const name = document.getElementById('t-name').value;
+            const wing = document.getElementById('t-wing').value;
+            const canProxy = document.getElementById('t-proxy').value === 'true';
+            const cls = document.getElementById('t-class').value;
+
+            if(!name) return alert("Name is required");
+
+            const { data: t, error } = await _db.from('teachers').insert({ name, wing, can_take_proxy: canProxy, ct_class: cls }).select().single();
+            
+            if(t) {
+                const rows = document.querySelectorAll('.flex.gap-2.items-center');
+                for(let row of rows) {
+                    const d = row.querySelector('.r-day').value;
+                    const p = row.querySelector('.r-prd').value;
+                    const type = row.querySelector('.r-type').value;
+                    const c = row.querySelector('.r-cls').value;
+
+                    if(p) {
+                        if(type === 'busy') await _db.from('teacher_schedule').insert({ teacher_id: t.id, day_of_week: d, period_number: p, class_name: c });
+                        else await _db.from('free_periods').insert({ teacher_id: t.id, day_of_week: d, period_number: p });
+                    }
+                }
+            }
+            closeModal();
+            refresh();
+        }
+
+        refresh();
     </script>
 </body>
 </html>
