@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX v4.2 | Secure Admin</title>
+    <title>MATRIX v4.4 | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -19,11 +19,10 @@
 
     <div id="auth-overlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6">
         <div class="max-w-md w-full glass p-8 rounded-3xl text-center">
-            <h1 class="text-3xl font-black text-cyan-400 mb-2 italic">MATRIX v4.2</h1>
-            <p class="text-gray-500 text-xs font-bold mb-8 uppercase tracking-widest">Authorized Personnel Only</p>
+            <h1 class="text-3xl font-black text-cyan-400 mb-2 italic">MATRIX v4.4</h1>
             <input type="password" id="admin-pass" placeholder="Enter System Password" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-4 text-center outline-none focus:border-cyan-500 transition">
-            <button onclick="checkAuth()" class="w-full bg-cyan-500 text-black font-black py-4 rounded-2xl hover:bg-cyan-400 transition shadow-lg shadow-cyan-500/20">ACCESS SYSTEM</button>
-            <p id="auth-error" class="text-red-500 text-xs mt-4 hidden">Access Denied: Incorrect Password</p>
+            <button onclick="checkAuth()" class="w-full bg-cyan-500 text-black font-black py-4 rounded-2xl hover:bg-cyan-400 transition">ACCESS SYSTEM</button>
+            <p id="auth-error" class="text-red-500 text-xs mt-4 hidden">Access Denied</p>
         </div>
     </div>
 
@@ -31,14 +30,11 @@
         <div class="max-w-7xl mx-auto">
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div>
-                    <h1 class="text-4xl font-black text-cyan-400 tracking-tighter">MATRIX <span class="text-white/20 text-xl font-medium italic">v4.2</span></h1>
-                    <p class="text-gray-500 font-bold uppercase text-xs tracking-widest mt-1" id="day-display">SYSTEM ONLINE</p>
+                    <h1 class="text-4xl font-black text-cyan-400 tracking-tighter">MATRIX <span class="text-white/20 text-xl font-medium italic">v4.4</span></h1>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2.5 rounded-xl font-bold text-sm transition shadow-lg">+ NEW TEACHER</button>
-                    <button onclick="document.getElementById('csv-file').click()" class="bg-slate-800 hover:bg-slate-700 px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-700">IMPORT CSV</button>
-                    <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="uploadCSV(event)">
-                    <button onclick="location.reload()" class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-gray-500 font-bold text-xs uppercase">Logout</button>
+                    <button onclick="openModal()" class="bg-blue-600 px-5 py-2.5 rounded-xl font-bold text-sm">+ NEW TEACHER</button>
+                    <button onclick="location.reload()" class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-gray-500 font-bold text-xs">LOGOUT</button>
                 </div>
             </header>
 
@@ -47,9 +43,8 @@
                     <h3 class="text-lg font-black text-gray-300 mb-6">STAFF DIRECTORY</h3>
                     <div id="staff-list" class="space-y-3 overflow-y-auto custom-scroll pr-2 flex-grow"></div>
                 </div>
-
-                <div class="lg:col-span-7 glass rounded-3xl p-6 h-[75vh] flex flex-col border-cyan-900/20 shadow-[0_0_50px_-12px_rgba(34,211,238,0.1)]">
-                    <h3 class="text-lg font-black text-cyan-400 mb-6 flex items-center gap-2">LIVE AI SUGGESTIONS</h3>
+                <div class="lg:col-span-7 glass rounded-3xl p-6 h-[75vh] flex flex-col border-cyan-900/20">
+                    <h3 class="text-lg font-black text-cyan-400 mb-6">LIVE AI SUGGESTIONS</h3>
                     <div id="ai-list" class="space-y-4 overflow-y-auto custom-scroll pr-2 flex-grow"></div>
                 </div>
             </div>
@@ -57,43 +52,20 @@
     </div>
 
     <div id="modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glass w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto border-white/10 shadow-2xl">
-            <h2 id="modal-title" class="text-2xl font-black text-cyan-400 mb-6 uppercase tracking-tighter">Faculty Record</h2>
-            
+        <div class="glass w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto border-white/10">
+            <h2 id="modal-title" class="text-2xl font-black text-cyan-400 mb-6 uppercase">Faculty Record</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase">Name</label>
-                    <input type="text" id="t-name" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 text-white outline-none focus:border-cyan-500 transition">
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase">Wing</label>
-                    <select id="t-wing" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 text-white outline-none">
-                        <option>Senior</option>
-                        <option>Primary</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase">Proxy Allowed?</label>
-                    <select id="t-proxy" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 text-white outline-none">
-                        <option value="true">YES - Available</option>
-                        <option value="false">NO - Rule 2 Exempt</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase">Class Teacher Of</label>
-                    <input type="text" id="t-class" placeholder="e.g. 10" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl mt-1 text-white outline-none">
-                </div>
+                <input type="text" id="t-name" placeholder="Name" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                <select id="t-wing" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl"><option>Senior</option><option>Primary</option></select>
             </div>
-
             <div class="flex justify-between items-center mb-4">
-                <h4 class="text-xs font-black text-gray-500 uppercase">Routine Configuration (Add Sections)</h4>
-                <button onclick="addScheduleRow()" class="text-cyan-500 text-xs font-bold bg-cyan-500/10 px-3 py-1 rounded-full">+ ADD SLOT</button>
+                <h4 class="text-xs font-black text-gray-500 uppercase">Routine (Class / Sec / Subject)</h4>
+                <button onclick="addScheduleRow()" class="text-cyan-500 text-xs font-bold">+ ADD SLOT</button>
             </div>
             <div id="schedule-container" class="space-y-2"></div>
-
             <div class="flex gap-4 mt-10">
-                <button onclick="saveTeacher()" class="flex-grow bg-cyan-500 py-4 rounded-2xl font-black text-black uppercase tracking-tighter hover:scale-[1.02] transition">Sync to Cloud</button>
-                <button onclick="closeModal()" class="bg-slate-800 px-8 rounded-2xl font-bold text-gray-400 hover:bg-slate-700">CANCEL</button>
+                <button onclick="saveTeacher()" class="flex-grow bg-cyan-500 py-4 rounded-2xl font-black text-black">SAVE TO CLOUD</button>
+                <button onclick="closeModal()" class="bg-slate-800 px-8 rounded-2xl font-bold">CANCEL</button>
             </div>
         </div>
     </div>
@@ -102,20 +74,16 @@
         const SB_URL = 'https://cfxobkfkhlirxepxvxjr.supabase.co'; 
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmeG9ia2ZraGxpcnhlcHh2eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2NDUsImV4cCI6MjA5Mjg4ODY0NX0.spKXqpRScu3U7uiMnoA0iEJkiLf68RxGZya07WRlakg';
         const _db = supabase.createClient(SB_URL, SB_KEY);
-        
-        const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-        const today = days[new Date().getDay()];
+        const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const today = days[new Date().getDay() - 1] || 'Monday';
         let editingTeacherId = null;
 
         function checkAuth() {
             if (document.getElementById('admin-pass').value === 'admin123') {
                 document.getElementById('auth-overlay').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('day-display').innerText = `ROUTINE STATUS: ${today.toUpperCase()}`;
                 refresh();
-            } else {
-                document.getElementById('auth-error').classList.remove('hidden');
-            }
+            } else { document.getElementById('auth-error').classList.remove('hidden'); }
         }
 
         async function refresh() {
@@ -126,12 +94,10 @@
 
         function renderStaff(list) {
             document.getElementById('staff-list').innerHTML = list.map(t => `
-                <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl flex justify-between items-center hover:border-slate-600 transition">
+                <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
                     <div>
                         <div class="font-bold text-gray-200">${t.name}</div>
-                        <div class="text-[10px] font-bold text-slate-500 uppercase mt-1">
-                            ${t.wing} | Load: ${t.proxy_count} | ${t.can_take_proxy ? 'ELIGIBLE' : 'EXEMPT'}
-                        </div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase mt-1">${t.wing}</div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="openEditModal('${t.id}')" class="px-3 py-2 bg-slate-800 rounded-lg text-[10px] font-bold text-cyan-400">EDIT</button>
@@ -143,42 +109,28 @@
             `).join('');
         }
 
-        // --- UPDATED EDIT MODAL WITH SECTION ---
         async function openEditModal(id) {
             editingTeacherId = id;
-            document.getElementById('modal-title').innerText = "Update Faculty Record";
             const { data: t } = await _db.from('teachers').select('*').eq('id', id).single();
-            
             document.getElementById('t-name').value = t.name;
             document.getElementById('t-wing').value = t.wing;
-            document.getElementById('t-proxy').value = t.can_take_proxy.toString();
-            document.getElementById('t-class').value = t.ct_class || '';
-
+            
             document.getElementById('schedule-container').innerHTML = '';
             const { data: busy } = await _db.from('teacher_schedule').select('*').eq('teacher_id', id);
-            const { data: free } = await _db.from('free_periods').select('*').eq('teacher_id', id);
-            
-            busy?.forEach(r => addScheduleRow(r.day_of_week, r.period_number, 'busy', r.class_name, r.section));
-            free?.forEach(r => addScheduleRow(r.day_of_week, r.period_number, 'free', '', ''));
-
+            busy?.forEach(r => addScheduleRow(r.day_of_week, r.period_number, 'busy', r.class_name, r.section, r.subject));
             document.getElementById('modal').classList.remove('hidden');
         }
 
-        function addScheduleRow(d='Monday', p='', type='busy', c='', s='') {
+        function addScheduleRow(d='Monday', p='', type='busy', c='', s='', sub='') {
             const div = document.createElement('div');
             div.className = "flex gap-2 items-center bg-slate-800/20 p-2 rounded-xl border border-slate-800";
             div.innerHTML = `
-                <select class="r-day bg-slate-900 text-[10px] p-2 rounded outline-none flex-grow">
-                    ${days.filter(day => day !== 'Sunday').map(day => `<option ${day===d?'selected':''}>${day}</option>`).join('')}
-                </select>
-                <input type="number" value="${p}" class="r-prd w-10 bg-slate-900 p-2 rounded text-center text-[10px]" placeholder="Prd">
-                <select class="r-type bg-slate-900 p-2 rounded text-[10px]">
-                    <option value="busy" ${type==='busy'?'selected':''}>BUSY</option>
-                    <option value="free" ${type==='free'?'selected':''}>FREE</option>
-                </select>
-                <input type="text" value="${c}" class="r-cls w-12 bg-slate-900 p-2 rounded text-[10px]" placeholder="Class">
+                <select class="r-day bg-slate-900 text-[10px] p-2 rounded outline-none">${days.map(day => `<option ${day===d?'selected':''}>${day}</option>`).join('')}</select>
+                <input type="number" value="${p}" class="r-prd w-10 bg-slate-900 p-2 rounded text-center text-[10px]" placeholder="P">
+                <input type="text" value="${c}" class="r-cls w-12 bg-slate-900 p-2 rounded text-[10px]" placeholder="Cls">
                 <input type="text" value="${s}" class="r-sec w-10 bg-slate-900 p-2 rounded text-[10px]" placeholder="Sec">
-                <button onclick="this.parentElement.remove()" class="text-red-500 px-2 font-bold hover:scale-125 transition">×</button>
+                <input type="text" value="${sub}" class="r-sub w-16 bg-slate-900 p-2 rounded text-[10px]" placeholder="Sub">
+                <button onclick="this.parentElement.remove()" class="text-red-500 font-bold">×</button>
             `;
             document.getElementById('schedule-container').appendChild(div);
         }
@@ -186,113 +138,50 @@
         async function saveTeacher() {
             const name = document.getElementById('t-name').value;
             const wing = document.getElementById('t-wing').value;
-            const canProxy = document.getElementById('t-proxy').value === 'true';
-            const cls = document.getElementById('t-class').value;
-
-            let tId = editingTeacherId;
+            
             if(editingTeacherId) {
-                await _db.from('teachers').update({ name, wing, can_take_proxy: canProxy, ct_class: cls }).eq('id', tId);
-                await _db.from('teacher_schedule').delete().eq('teacher_id', tId);
-                await _db.from('free_periods').delete().eq('teacher_id', tId);
+                await _db.from('teachers').update({ name, wing }).eq('id', editingTeacherId);
+                await _db.from('teacher_schedule').delete().eq('teacher_id', editingTeacherId);
             } else {
-                const { data: newT } = await _db.from('teachers').insert({ name, wing, can_take_proxy: canProxy, ct_class: cls }).select().single();
-                tId = newT.id;
+                const { data: newT } = await _db.from('teachers').insert({ name, wing }).select().single();
+                editingTeacherId = newT.id;
             }
 
             const rows = document.querySelectorAll('#schedule-container > div');
             for(let row of rows) {
-                const d = row.querySelector('.r-day').value;
-                const p = row.querySelector('.r-prd').value;
-                const type = row.querySelector('.r-type').value;
-                const c = row.querySelector('.r-cls').value;
-                const s = row.querySelector('.r-sec').value;
-
-                if(p) {
-                    if(type === 'busy') {
-                        await _db.from('teacher_schedule').insert({ teacher_id: tId, day_of_week: d, period_number: p, class_name: c, section: s });
-                    } else {
-                        await _db.from('free_periods').insert({ teacher_id: tId, day_of_week: d, period_number: p });
-                    }
-                }
+                await _db.from('teacher_schedule').insert({ 
+                    teacher_id: editingTeacherId, 
+                    day_of_week: row.querySelector('.r-day').value, 
+                    period_number: row.querySelector('.r-prd').value, 
+                    class_name: row.querySelector('.r-cls').value,
+                    section: row.querySelector('.r-sec').value,
+                    subject: row.querySelector('.r-sub').value
+                });
             }
-            closeModal();
-            refresh();
+            closeModal(); refresh();
         }
 
-        // --- AI ENGINE WITH CLASS-SECTION DISPLAY ---
         async function processAI(all) {
             const container = document.getElementById('ai-list');
             const absentees = all.filter(t => t.is_absent);
-            if (absentees.length === 0) {
-                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-800 py-20 border-2 border-dashed border-slate-900 rounded-3xl"><p class="font-black text-lg">SYSTEM CLEAR. NO ABSENCES.</p></div>`;
-                return;
-            }
-
             let html = "";
             for (let abs of absentees) {
                 const { data: schedule } = await _db.from('teacher_schedule').select('*').eq('teacher_id', abs.id).eq('day_of_week', today);
                 for (let slot of (schedule || [])) {
-                    const { data: freeData } = await _db.from('free_periods').select('teacher_id, teachers(*)').eq('day_of_week', today).eq('period_number', slot.period_number);
-                    let candidates = freeData?.map(f => f.teachers).filter(t => t && !t.is_absent && t.can_take_proxy) || [];
-                    
-                    candidates.sort((a, b) => {
-                        let scoreA = (a.wing === abs.wing ? 100 : 0) - (a.proxy_count * 10);
-                        let scoreB = (b.wing === abs.wing ? 100 : 0) - (b.proxy_count * 10);
-                        return scoreB - scoreA;
-                    });
-
-                    const m = candidates[0];
                     html += `
-                        <div class="bg-slate-900/60 border ${m ? 'border-cyan-900/30' : 'border-red-900/30'} p-5 rounded-3xl">
-                            <div class="flex justify-between mb-4">
-                                <div>
-                                    <span class="text-[10px] text-cyan-400 font-black">PERIOD ${slot.period_number}</span>
-                                    <h4 class="text-xl font-black">${slot.class_name}${slot.section ? `-${slot.section}` : ''}</h4>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Absent Staff</span>
-                                    <div class="text-red-400 font-bold text-sm">${abs.name}</div>
-                                </div>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                ${m ? `
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="font-black text-green-400 text-lg">${m.name}</div>
-                                            <div class="text-[10px] text-slate-500 uppercase">Wing: ${m.wing} | Load: ${m.proxy_count}</div>
-                                        </div>
-                                        <button onclick="confirmProxy('${m.id}')" class="bg-cyan-500 text-black px-5 py-2 rounded-xl font-black text-xs hover:scale-105 transition">CONFIRM</button>
-                                    </div>
-                                ` : `<div class="text-red-500 font-black italic">NO ELIGIBLE STAFF AVAILABLE</div>`}
-                            </div>
+                        <div class="bg-slate-900/60 p-5 rounded-3xl border border-slate-800">
+                            <span class="text-[10px] text-cyan-400 font-black">PERIOD ${slot.period_number}</span>
+                            <h4 class="text-lg font-black">${slot.class_name}-${slot.section}</h4>
+                            <p class="text-xs text-slate-400 uppercase">${slot.subject} | Absent: ${abs.name}</p>
                         </div>`;
                 }
             }
-            container.innerHTML = html;
-        }
-
-        async function confirmProxy(id) {
-            const { data } = await _db.from('teachers').select('proxy_count').eq('id', id).single();
-            await _db.from('teachers').update({ proxy_count: (data.proxy_count || 0) + 1 }).eq('id', id);
-            alert("Proxy confirmed. Staff workload updated.");
-            refresh();
+            container.innerHTML = html || `<p class="text-slate-600">No current absences.</p>`;
         }
 
         async function toggleAbsence(id, cur) { await _db.from('teachers').update({ is_absent: !cur }).eq('id', id); refresh(); }
-        function openModal() { editingTeacherId = null; document.getElementById('modal-title').innerText = "New Faculty Record"; document.getElementById('modal').classList.remove('hidden'); addScheduleRow(); }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('schedule-container').innerHTML = ''; }
-        
-        async function uploadCSV(event) {
-            const file = event.target.files[0];
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async (results) => {
-                    const { error } = await _db.from('teachers').insert(results.data);
-                    if(error) alert(error.message); else { alert("Bulk Import Success!"); refresh(); }
-                }
-            });
-        }
+        function openModal() { editingTeacherId = null; document.getElementById('modal').classList.remove('hidden'); addScheduleRow(); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
